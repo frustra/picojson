@@ -584,6 +584,16 @@ template <typename Iter> void value::_serialize(Iter oi, int indent) const {
     serialize_str(*u_.string_, oi);
     break;
   case array_type: {
+    bool forceInline = true;
+    for (auto &v : *u_.array_) {
+      if (v.is<picojson::array>() || v.is<picojson::object>() || v.is<std::string>()) {
+        forceInline = false;
+        break;
+      }
+    }
+    if (forceInline) {
+      indent = -1;
+    }
     *oi++ = '[';
     if (indent != -1) {
       ++indent;
