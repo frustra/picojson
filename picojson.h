@@ -493,7 +493,13 @@ inline std::string value::to_str() const {
   case number_type: {
     char buf[256];
     double tmp;
-    SNPRINTF(buf, sizeof(buf), fabs(u_.number_) < (1ULL << 53) && modf(u_.number_, &tmp) == 0 ? "%.f" : "%.17g", u_.number_);
+    if (fabs(u_.number_) < (1ULL << 53) && modf(u_.number_, &tmp) == 0) {
+      SNPRINTF(buf, sizeof(buf), "%.f", u_.number_); // Integers
+    } else if ((double)(float)u_.number_ == u_.number_) {
+      SNPRINTF(buf, sizeof(buf), "%.7g", u_.number_); // Floats
+    } else {
+      SNPRINTF(buf, sizeof(buf), "%.16g", u_.number_); // Doubles
+    }
 #if PICOJSON_USE_LOCALE
     char *decimal_point = localeconv()->decimal_point;
     if (strcmp(decimal_point, ".") != 0) {
