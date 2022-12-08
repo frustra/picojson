@@ -130,7 +130,7 @@ enum {
 #endif
 };
 
-enum { INDENT_WIDTH = 2, DEFAULT_MAX_DEPTHS = 100 };
+enum { DEFAULT_MAX_DEPTHS = 100 };
 
 struct null {};
 
@@ -496,7 +496,7 @@ inline std::string value::to_str() const {
     if (fabs(u_.number_) < (1ULL << 53) && modf(u_.number_, &tmp) == 0) {
       SNPRINTF(buf, sizeof(buf), "%.f", u_.number_); // Integers
     } else if ((double)(float)u_.number_ == u_.number_) {
-      SNPRINTF(buf, sizeof(buf), "%.7g", u_.number_); // Floats
+      SNPRINTF(buf, sizeof(buf), "%.6g", u_.number_); // Floats
     } else {
       SNPRINTF(buf, sizeof(buf), "%.16g", u_.number_); // Doubles
     }
@@ -578,8 +578,8 @@ inline std::string value::serialize(bool prettify) const {
 
 template <typename Iter> void value::_indent(Iter oi, int indent) {
   *oi++ = '\n';
-  for (int i = 0; i < indent * INDENT_WIDTH; ++i) {
-    *oi++ = ' ';
+  for (int i = 0; i < indent; ++i) {
+    *oi++ = '\t';
   }
 }
 
@@ -597,22 +597,25 @@ template <typename Iter> void value::_serialize(Iter oi, int indent) const {
       }
     }
     if (forceInline) {
-      indent = -1;
+      indent = -2;
     }
     *oi++ = '[';
-    if (indent != -1) {
+    if (indent >= 0) {
       ++indent;
     }
     for (array::const_iterator i = u_.array_->begin(); i != u_.array_->end(); ++i) {
       if (i != u_.array_->begin()) {
         *oi++ = ',';
+        if (indent == -2) {
+          *oi++ = ' ';
+        }
       }
-      if (indent != -1) {
+      if (indent >= 0) {
         _indent(oi, indent);
       }
       i->_serialize(oi, indent);
     }
-    if (indent != -1) {
+    if (indent >= 0) {
       --indent;
       if (!u_.array_->empty()) {
         _indent(oi, indent);
@@ -623,24 +626,24 @@ template <typename Iter> void value::_serialize(Iter oi, int indent) const {
   }
   case object_type: {
     *oi++ = '{';
-    if (indent != -1) {
+    if (indent >= 0) {
       ++indent;
     }
     for (object::const_iterator i = u_.object_->begin(); i != u_.object_->end(); ++i) {
       if (i != u_.object_->begin()) {
         *oi++ = ',';
       }
-      if (indent != -1) {
+      if (indent >= 0) {
         _indent(oi, indent);
       }
       serialize_str(i->first, oi);
       *oi++ = ':';
-      if (indent != -1) {
+      if (indent >= 0) {
         *oi++ = ' ';
       }
       i->second._serialize(oi, indent);
     }
-    if (indent != -1) {
+    if (indent >= 0) {
       --indent;
       if (!u_.object_->empty()) {
         _indent(oi, indent);
