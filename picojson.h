@@ -33,6 +33,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -134,10 +135,18 @@ enum { DEFAULT_MAX_DEPTHS = 100 };
 
 struct null {};
 
+typedef std::function<bool(const string &, const string &)> compare_function;
+struct order_function : public compare_function {
+    order_function() : compare_function(std::less<string>()) {}
+
+    template<typename Callable>
+    order_function(Callable compare) : compare_function(compare) {}
+};
+
 class value {
 public:
   typedef std::vector<value> array;
-  typedef std::map<std::string, value> object;
+  typedef std::map<std::string, value, order_function> object;
   union _storage {
     bool boolean_;
     double number_;
