@@ -505,7 +505,15 @@ inline std::string value::to_str() const {
     if (fabs(u_.number_) < (1ULL << 53) && modf(u_.number_, &tmp) == 0) {
       SNPRINTF(buf, sizeof(buf), "%.f", u_.number_); // Integers
     } else if ((double)(float)u_.number_ == u_.number_) {
-      SNPRINTF(buf, sizeof(buf), "%.6g", u_.number_); // Floats
+      SNPRINTF(buf, sizeof(buf), "%.4f", u_.number_); // Floats
+      // Remove trailing zeros
+      char *p = buf + strlen(buf) - 1;
+      while (*p == '0' && p > buf) {
+        *p-- = '\0';
+      }
+      if (*p == '.') {
+        *p = '\0';
+      }
     } else {
       SNPRINTF(buf, sizeof(buf), "%.16g", u_.number_); // Doubles
     }
